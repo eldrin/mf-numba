@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+numpy = "*"
+numba = "*"
+scipy = "*"
+ipykernel = "*"
+pandas = "*"
+matplotlib = "*"
+tqdm = "*"
+prefetch-generator = "*"
+sklearn = "*"
+
+[requires]
+python_version = "3.6"
