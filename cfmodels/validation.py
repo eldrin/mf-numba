@@ -53,12 +53,17 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
         if isinstance(metric, RankingMetric):
             # considering the case where all the (relavant) 
             # train item included in the prediction
-            cutoff = metric.cutoff + n_user_train_items
+            if metric.cutoff is not None:
+                pred_cutoff = metric.cutoff + n_user_train_items
+                eval_cutoff = metric.cutoff
+            else:
+                pred_cutoff = user_item.shape[1]  # using entire items
+                eval_cutoff = pred_cutoff
             
             if features is not None:
-                pred = model.predict(u, cutoff=cutoff, features=features)
+                pred = model.predict(u, cutoff=pred_cutoff, features=features)
             else:
-                pred = model.predict(u, cutoff=cutoff)
+                pred = model.predict(u, cutoff=pred_cutoff)
 
             pred_ = []
             for i in range(len(pred)):
@@ -71,7 +76,7 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
                         pred_.append(pred[i])
                 else:
                     pred_.append(pred[i])
-            pred = np.array(pred_[:metric.cutoff])
+            pred = np.array(pred_[:eval_cutoff])
             
             test_items = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
             true = np.array(test_items)

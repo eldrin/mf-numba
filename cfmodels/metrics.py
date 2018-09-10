@@ -26,8 +26,16 @@ class RankingMetric(MetricBase):
         """"""
         super().__init__(name)
         self.cutoff = cutoff
-        self.name = '{}@{:d}'.format(self.name, self.cutoff)
-
+        if cutoff is None:
+            self.name = self.name
+        elif isinstance(cutoff, int):
+            self.name = '{}@{:d}'.format(self.name, self.cutoff)
+        elif isinstance(cutoff, float):
+            # TODO: pushing warning for users about rounding
+            self.name = '{}@{:d}'.format(self.name, int(np.round(self.cutoff)))
+        else:
+            raise NotImplementedError
+            
         
 class AveragePrecision(RankingMetric):
     """"""
