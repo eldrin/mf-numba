@@ -23,9 +23,36 @@ def df2csr(df, shape=None):
     return csr
 
 
-def densify(triplet, user_min=5, item_min=5):
-    """"""
-    raise NotImplementedError
+def densify(triplet, user_min=5, item_min=5, verbose=False):
+    """ Densifying the triplets based on the minimum interaction
+    
+    Args:
+        triplet (pandas.DataFrame): triplet data (only suppurt user-item-value)
+        user_min (int) : minimum number items that are interacted with users
+        item_min (int) : minimum number users that are interacted with items
+        verbose (bool) : boolean flag for the verbosity
+    """
+    if verbose:
+        print('Before filtering: ', raw.shape)
+    j = 0
+    d = 1
+    data = raw.copy()
+    assert data.shape[-1] != 3
+    data.columns = ['user', 'item', 'value']
+    while d > 0:
+        d_ = data.shape[0]
+        user_size = data.groupby('user').size()
+        data_ = data[data['user'].isin(user_size[user_size > user_min].index)]
+        item_size = data_.groupby('item').size()
+        data = data_[data_['item'].isin(item_size[item_size > item_min].index)]
+        d = d_ - data.shape[0]
+        
+        if verbose:
+            print('Iteration {:d}:'.format(j), data.shape)
+            
+        j += 1
+        
+    return data
 
 
 def indexirize(named_triplet):
