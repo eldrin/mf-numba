@@ -54,7 +54,7 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             # considering the case where all the (relavant) 
             # train item included in the prediction
             if metric.cutoff is not None:
-                pred_cutoff = metric.cutoff + n_user_train_items
+                pred_cutoff = metric.cutoff + n_user_train_items[u]
                 eval_cutoff = metric.cutoff
             else:
                 pred_cutoff = user_item.shape[1]  # using entire items
