@@ -55,10 +55,11 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             # train item included in the prediction
             if metric.cutoff is not None:
                 pred_cutoff = metric.cutoff + n_user_train_items[u]
-                eval_cutoff = metric.cutoff
+                if pred_cutoff > user_item.shape[1]:
+                    pred_cutoff = user_item.shape[1] - 1
             else:
-                pred_cutoff = user_item.shape[1]  # using entire items
-                eval_cutoff = pred_cutoff
+                pred_cutoff = user_item.shape[1] - 1  # using entire items
+                metric.cutoff = pred_cutoff
             
             if features is not None:
                 pred = model.predict(u, cutoff=pred_cutoff, features=features)
@@ -76,8 +77,7 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
                         pred_.append(pred[i])
                 else:
                     pred_.append(pred[i])
-            pred = np.array(pred_[:eval_cutoff])
-            
+            pred = np.array(pred_[:metric.cutoff])
             test_items = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
             true = np.array(test_items)
             scores_.append(metric(true, pred))
