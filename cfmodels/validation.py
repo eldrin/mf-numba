@@ -51,11 +51,14 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             continue
             
         if isinstance(metric, RankingMetric):
-
+            # considering the case where all the (relavant) 
+            # train item included in the prediction
+            cutoff = metric.cutoff + n_user_train_items
+            
             if features is not None:
-                pred = model.predict(u, cutoff=int(metric.cutoff * 10), features=features)
+                pred = model.predict(u, cutoff=cutoff, features=features)
             else:
-                pred = model.predict(u, cutoff=int(metric.cutoff * 10))
+                pred = model.predict(u, cutoff=cutoff)
 
             pred_ = []
             for i in range(len(pred)):
@@ -84,7 +87,6 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             else:
                 pred = model.predict(u, test_ind)
 
-            # pred = model.predict(u, test_ind)
             scores_.append(metric(true, pred))
             
     return np.mean(scores_)
