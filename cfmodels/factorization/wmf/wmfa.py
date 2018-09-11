@@ -162,15 +162,15 @@ class WMFA(TopKRecommender):
     def predict(self, user, features=None, cutoff=40):
         """"""
         if features is None:
-            return predict_k(
-                user, self.user_factors, self.item_factors, cutoff
-            )
+            item_factors = self.item_factors
         else:
-            return predict_k(
-                user, self.user_factors,
-                self.factor_feature.dot(features),
-                cutoff
-            )
+            item_factors = self.factor_feature.dot(features)
+            
+        return predict_k(
+            user, self.user_factors, item_factors, cutoff
+        )
+        
+
 
     def score(self, Rtr, Rts, features=None):
         """"""

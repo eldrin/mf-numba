@@ -44,6 +44,26 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
     # aliasing
     Rtr = user_item
     Rts = user_item_test
+
+    # pre-processing the metric cutoffs
+    if isinstance(metric, RankingMetric):
+        # considering the case where all the (relavant) 
+        # train item included in the prediction
+        if metric.cutoff is not None:
+            pred_cutoffs = [
+                metric.cutoff + n_items
+                if pred_cutoff < user_item.shape[1]
+                else user_item.shape[1] - 1
+                for n_items
+                in n_user_train_items
+            ]
+            # pred_cutoff = metric.cutoff + n_user_train_items
+            # if pred_cutoff >= user_item.shape[1]:
+            #     pred_cutoff = user_item.shape[1] - 1
+        else:
+            # using entire items
+            pred_cutoffs = [user_item.shape[1] - 1] * user_item.shape[0]
+            metric.cutoff = pred_cutoffs[0]
     
     scores_ = []
     for u in range(n_users):
@@ -51,20 +71,12 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             continue
             
         if isinstance(metric, RankingMetric):
-            # considering the case where all the (relavant) 
-            # train item included in the prediction
-            if metric.cutoff is not None:
-                pred_cutoff = metric.cutoff + n_user_train_items[u]
-                if pred_cutoff >= user_item.shape[1]:
-                    pred_cutoff = user_item.shape[1] - 1
-            else:
-                pred_cutoff = user_item.shape[1] - 1  # using entire items
-                metric.cutoff = pred_cutoff
-            
+           
             if features is not None:
-                pred = model.predict(u, cutoff=pred_cutoff, features=features)
+                pred = model.predict(u, cutoff=pred_cutoffs[u],
+                                     features=features)
             else:
-                pred = model.predict(u, cutoff=pred_cutoff)
+                pred = model.predict(u, cutoff=pred_cutoffs[u])
 
             pred_ = []
             for i in range(len(pred)):
