@@ -1,7 +1,7 @@
 import pandas as pd
 from os.path import abspath, dirname, join
 from .utils import read_data, df2csr, df2fm
-from .validation import split_inner
+from .validation import split_inner, split_time, split_user
 
 
 def load_test_data():
@@ -9,15 +9,17 @@ def load_test_data():
                           columns=['user', 'item', 'value'])
     # data, raw = read_data(join(dirname(__file__), '..', 'data/Jam.subset.no_blacklist_mel_safe.triplet'),
     #                       columns=['user', 'item', 'value'])
-    # data, raw = read_data(join(dirname(__file__), '..', 'data/ml-1m.csv'),
-    #                       columns=['user', 'item', 'value'])
+    # data, raw = read_data(join(dirname(__file__), '..', 'data/ml-100k.csv'),
+    #                       columns=['user', 'item', 'value', 'time'])
     # data, raw = read_data('/Users/jaykim/Documents/project/RecSys18Spotify/data/subsets/0/playlist_track_ss_train.csv', 
     #                       columns=['user', 'item', 'value'])
     # datat, rawt = read_data('/Users/jaykim/Documents/project/RecSys18Spotify/data/subsets/0/playlist_track_ss_test.csv', 
     #                       columns=['user', 'item', 'value'], shape=data.shape)
     # return raw, rawt, data, datat
     
-    train, test = split_inner(raw)
+    # train, test = split_inner(raw)
+    # train, test = split_time(raw)
+    train, test = split_user(raw, ratio=0.6)
     Rtr = df2csr(train, data.shape)
     Rts = df2csr(test, data.shape)
     return train, test, Rtr, Rts
@@ -25,11 +27,11 @@ def load_test_data():
 
 def test_bpr(Rtr, Rts, k=20, verbose=1):
     from .factorization import BPR
-    from .metrics import AveragePrecision
+    from .metrics import AveragePrecision, NDCG, Recall
 
     bpr = BPR(n_factors=k, lr=0.0001, reg=0.001, init=0.01,
               n_epochs=100, verbose=1,
-              report_every=None)
+              report_every=None, monitors=[AveragePrecision(k=10), NDCG(k=10), Recall(k=10)])
     bpr.fit(Rtr, Rts)
     print(bpr.score(Rtr, Rts))
     return bpr
@@ -46,8 +48,10 @@ def test_sgns(Rtr, Rts, k=20, verbose=1):
     
 def test_wmf(Rtr, Rts, k=20, verbose=1):
     from .factorization import WMF
-    wmf = WMF(n_factors=k, reg=0.001, init=0.01, alpha=0.2,
-              n_epochs=15, verbose=1, report_every=None)
+    from .metrics import AveragePrecision, NDCG, Recall
+    wmf = WMF(n_factors=k, reg=0.1, init=0.01, alpha=0.5,
+              n_epochs=15, verbose=1, report_every=None,
+              monitors=[AveragePrecision(k=10), NDCG(k=10), Recall(k=10)])
     wmf.fit(Rtr, Rts)
     print(wmf.score(Rtr, Rts))
     return wmf
@@ -119,8 +123,8 @@ def test_ncf(Rtr, Rts, type='rank', k=20, arch=(20,), verbose=1):
 if __name__ == "__main__":
     
     train, test, Rtr, Rts = load_test_data()
-    model = test_wmf(Rtr, Rts)
-    # model = test_bpr(Rtr, Rts)
+    # model = test_wmf(Rtr, Rts)
+    model = test_bpr(Rtr, Rts)
     # model = test_sgns(Rtr, Rts)
     # model = test_implicit_als(Rtr, Rts)
     # model = test_implicit_bpr(Rtr, Rts)

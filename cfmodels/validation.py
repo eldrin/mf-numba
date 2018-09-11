@@ -30,6 +30,33 @@ def split_outer(data, target_column=1, ratio=0.8):
     return train, test
 
 
+def split_time(data, ratio=0.8):
+    """"""
+    assert data.shape[-1] >= 3  # assuming the last column is time
+    tt = np.percentile(data.iloc[:, -1], ratio)
+    train = data[data.iloc[:, -1] < tt].iloc[:, :3]
+    test = data[data.iloc[:, -1] >= tt].iloc[:, :3]
+    return train, test
+
+
+def split_user(data, ratio=0.8):
+    """"""
+    train = []
+    test = []
+    for (u, items), (_, value) in zip(
+        data.groupby('user')['item'].apply(list).items(),
+        data.groupby('user')['value'].apply(list).items()):
+
+        # np.random.shuffle(items)
+        bound = int(ratio * len(items))
+        train.extend([(u, i, v) for i, v in zip(items[:bound], value[:bound])])
+        test.extend([(u, i, v) for i, v in zip(items[bound:], value[bound:])])
+    train = pd.DataFrame(train, columns=['user', 'item', 'value'])
+    test = pd.DataFrame(test, columns=['user', 'item', 'value'])
+        
+    return train, test
+
+
 # currently dict is not supported by numba
 # could use cffi based c hash table such as:
 # https://github.com/synapticarbors/khash_numba
