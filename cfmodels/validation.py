@@ -58,7 +58,7 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             #     in n_user_train_items
             # ]
             pred_cutoffs = np.array(n_user_train_items) + metric.cutoff
-            pred_cutoffs = np.minimum(prd_cutoffs, metric.cutoff)
+            pred_cutoffs = np.minimum(pred_cutoffs, metric.cutoff)
             # pred_cutoff = metric.cutoff + n_user_train_items
             # if pred_cutoff >= user_item.shape[1]:
             #     pred_cutoff = user_item.shape[1] - 1
