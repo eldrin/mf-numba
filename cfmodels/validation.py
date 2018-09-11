@@ -50,19 +50,22 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
         # considering the case where all the (relavant) 
         # train item included in the prediction
         if metric.cutoff is not None:
-            pred_cutoffs = [
-                metric.cutoff + n_items
-                if pred_cutoff < user_item.shape[1]
-                else user_item.shape[1] - 1
-                for n_items
-                in n_user_train_items
-            ]
+            # pred_cutoffs = [
+            #     metric.cutoff + n_items
+            #     if pred_cutoff < user_item.shape[1]
+            #     else user_item.shape[1] - 1
+            #     for n_items
+            #     in n_user_train_items
+            # ]
+            pred_cutoffs = np.array(n_user_train_items) + metric.cutoff
+            pred_cutoffs = np.minimum(prd_cutoffs, metric.cutoff)
             # pred_cutoff = metric.cutoff + n_user_train_items
             # if pred_cutoff >= user_item.shape[1]:
             #     pred_cutoff = user_item.shape[1] - 1
         else:
             # using entire items
-            pred_cutoffs = [user_item.shape[1] - 1] * user_item.shape[0]
+            pred_cutoffs = np.ones(user_item.shape[0]) * (user_item.shape[1] - 1)
+            # pred_cutoffs = [user_item.shape[1] - 1] * user_item.shape[0]
             metric.cutoff = pred_cutoffs[0]
     
     scores_ = []
