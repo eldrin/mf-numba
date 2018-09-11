@@ -37,7 +37,7 @@ def densify(triplet, user_min=5, item_min=5, verbose=False):
     j = 0
     d = 1
     data = triplet.copy()
-    assert data.shape[-1] != 3
+    assert data.shape[-1] == 3
     data.columns = ['user', 'item', 'value']
     while d > 0:
         d_ = data.shape[0]
