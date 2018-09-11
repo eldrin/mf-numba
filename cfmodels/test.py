@@ -117,6 +117,7 @@ def test_ncf(Rtr, Rts, type='rank', k=20, arch=(20,), verbose=1):
     return ncf
     
 if __name__ == "__main__":
+    
     train, test, Rtr, Rts = load_test_data()
     model = test_wmf(Rtr, Rts)
     # model = test_bpr(Rtr, Rts)
