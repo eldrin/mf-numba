@@ -46,6 +46,7 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
     Rts = user_item_test
 
     # pre-processing the metric cutoffs
+    pred_cutoffs = 0
     if isinstance(metric, RankingMetric):
         # considering the case where all the (relavant) 
         # train item included in the prediction
