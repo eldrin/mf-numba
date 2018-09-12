@@ -79,10 +79,11 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
         # train item included in the prediction
         if metric.cutoff is not None:
             pred_cutoffs = np.array(n_user_train_items) + metric.cutoff
-            pred_cutoffs = np.minimum(pred_cutoffs, metric.cutoff)
+            pred_cutoffs = np.minimum(pred_cutoffs, metric.cutoff).astype(int)
         else:
             # using entire items
             pred_cutoffs = np.ones(user_item.shape[0]) * (user_item.shape[1] - 1)
+            pred_cutoffs = pred_cutoffs.astype(int)
             metric.cutoff = pred_cutoffs[0]
     
     scores_ = []

@@ -33,7 +33,7 @@ def densify(triplet, user_min=5, item_min=5, verbose=False):
         verbose (bool) : boolean flag for the verbosity
     """
     if verbose:
-        print('Before filtering: ', raw.shape)
+        print('Before filtering: ', triplet.shape)
     j = 0
     d = 1
     data = triplet.copy()
