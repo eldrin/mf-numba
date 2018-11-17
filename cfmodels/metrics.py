@@ -81,8 +81,43 @@ class Recall(RankingMetric):
         if len(predicted) > self.cutoff:
             predicted = predicted[:self.cutoff]
         
+        if len(actual) == 0:
+            return 0
+
         return len(set(actual).intersection(set(predicted))) / len(actual)
-    
+
+
+class EntropyBasedNovelty(MetricBase):
+    """"""
+    def __init__(self, item_popularity, name='ebn'):
+        """"""
+        super().__init__(name)
+        self.item_popularity = item_popularity
+
+    def __call__(self, predicted):
+        """"""
+        p = np.array([self.item_popularity[i] for i in predicted])
+        return -np.sum(p * np.log2(p))
+
+
+class DiversityInTopN(MetricBase):
+    """"""
+    def __init__(self, n_items, k=40, name='adiv'):
+        """"""
+        super().__init__(name=name)
+        self.cutoff = k
+        self.n_items = n_items
+
+    def __call__(self, all_predicted):
+        """"""
+        pred_set = set()
+        for pred in all_predicted:
+            if len(pred) > self.cutoff:
+                pred = pred[:self.cutoff]
+            pred_set.update(list(pred))
+        
+        return len(pred_set) / self.n_items
+
 
 @nb.jit
 def apk(actual, predicted, k=10):
