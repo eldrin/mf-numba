@@ -86,47 +86,66 @@ def evaluate(metric, model, user_item, user_item_test, features=None):
             pred_cutoffs = pred_cutoffs.astype(int)
             metric.cutoff = pred_cutoffs[0]
     
+    if isinstance(metric, RankingMetric):
+        return _evaluate_ranking(Rtr, Rts, model, metric, pred_cutoffs,
+                                 n_user_train_items, n_user_test_items,
+                                 features) 
+        
+    elif isinstance(metric, PointwiseMetric):
+        return _evaluate_rating(Rts, model, metric, n_user_test_items, features)
+
+
+@nb.jit
+def _evaluate_ranking(Rtr, Rts, model, metric, pred_cutoffs,
+                      n_user_train_items, n_user_test_items,
+                      features=None):
+    """"""
     scores_ = []
-    for u in range(n_users):
+    for u in nb.prange(Rts.shape[0]):
+        if n_user_test_items[u] == 0:
+            continue
+
+        if features is not None:
+            pred = model.predict(u, cutoff=pred_cutoffs[u],
+                                 features=features)
+        else:
+            pred = model.predict(u, cutoff=pred_cutoffs[u])
+
+        pred_ = []
+        for i in range(len(pred)):
+            if len(pred_) >= metric.cutoff:
+                break
+        
+            if n_user_train_items[u] > 0:
+                train_items = Rtr.indices[Rtr.indptr[u]:Rtr.indptr[u+1]]
+                if np.all(pred[i] != train_items):
+                    pred_.append(pred[i])
+            else:
+                pred_.append(pred[i])
+        pred = np.array(pred_[:metric.cutoff])
+        test_items = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
+        true = np.array(test_items)
+        scores_.append(metric(true, pred))
+    return np.mean(scores_)
+
+
+@nb.jit
+def _evaluate_rating(Rts, model, metric, n_user_test_items, features=None):
+    """"""
+    scores_ = []
+    for u in nb.prange(Rts.shape[0]):
         if n_user_test_items[u] == 0:
             continue
             
-        if isinstance(metric, RankingMetric):
-           
-            if features is not None:
-                pred = model.predict(u, cutoff=pred_cutoffs[u],
-                                     features=features)
-            else:
-                pred = model.predict(u, cutoff=pred_cutoffs[u])
+        test_ind = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
+        true = np.array(Rts.data[Rts.indptr[u]:Rts.indptr[u+1]])
+        
+        if features is not None:
+            pred = model.predict(u, test_ind, features=features)
+        else:
+            pred = model.predict(u, test_ind)
 
-            pred_ = []
-            for i in range(len(pred)):
-                if len(pred_) >= metric.cutoff:
-                    break
-            
-                if n_user_train_items[u] > 0:
-                    train_items = Rtr.indices[Rtr.indptr[u]:Rtr.indptr[u+1]]
-                    if np.all(pred[i] != train_items):
-                        pred_.append(pred[i])
-                else:
-                    pred_.append(pred[i])
-            pred = np.array(pred_[:metric.cutoff])
-            test_items = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
-            true = np.array(test_items)
-            scores_.append(metric(true, pred))
-            
-        elif isinstance(metric, PointwiseMetric):
-            
-            test_ind = Rts.indices[Rts.indptr[u]:Rts.indptr[u+1]]
-            true = np.array(Rts.data[Rts.indptr[u]:Rts.indptr[u+1]])
-            
-            if features is not None:
-                pred = model.predict(u, test_ind, features=features)
-            else:
-                pred = model.predict(u, test_ind)
-
-            scores_.append(metric(true, pred))
-            
+        scores_.append(metric(true, pred))
     return np.mean(scores_)
 
 

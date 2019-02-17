@@ -28,8 +28,9 @@ def update(Ctr, F, W, H, PHI, reg_phi, reg_wh):
     update_factors_W(n_items, H, PHI, F, reg_h, reg_phi)
     
     
-@nb.njit("void(i8,f4[:],i4[:],i4[:],f4[:, :],f4[:, :],f4)",
-         nogil=True, parallel=True, fastmath=True)
+# @nb.njit("void(i8,f4[:],i8[:],i8[:],f4[:, :],f4[:, :],f4)",
+#          nogil=True, parallel=True, fastmath=True)
+@nb.njit(nogil=True, parallel=True, fastmath=True)
 def update_factors_U(n_entities, data, indices, indptr, X, Y, reg_w):
     """""" 
     # pre-calc covariance
@@ -41,7 +42,7 @@ def update_factors_U(n_entities, data, indices, indptr, X, Y, reg_w):
         i0, i1 = indptr[n], indptr[n+1]
         if i1 - i0 == 0:
             continue
-        i_c, v_c = indices[i0:i1], data[i0:i1]
+        i_c, v_c = indices[i0:i1], data[np.int64(i0):np.int64(i1)]
         
         Yc = Y[:, i_c] 
         YCmIY = Yc.dot(np.diag(v_c)).dot(Yc.T)
@@ -52,8 +53,9 @@ def update_factors_U(n_entities, data, indices, indptr, X, Y, reg_w):
         X[:, n] = np.linalg.solve(A, b)
         
         
-@nb.njit("void(i8,f4[:],i4[:],i4[:],f4[:, :],f4[:, :],f4[:, :],f4[:, :],f4,f4)",
-         nogil=True, parallel=True, fastmath=True)
+# @nb.njit("void(i8,f4[:],i8[:],i8[:],f4[:, :],f4[:, :],f4[:, :],f4[:, :],f4,f4)",
+#          nogil=True, parallel=True, fastmath=True)
+@nb.njit(nogil=True, parallel=True, fastmath=True)
 def update_factors_V(n_entities, data, indices, indptr, X, Y, W, F, reg_h, reg_phi):
     """""" 
     # pre-calc covariance
@@ -65,7 +67,7 @@ def update_factors_V(n_entities, data, indices, indptr, X, Y, W, F, reg_h, reg_p
         i0, i1 = indptr[n], indptr[n+1]
         if i1 - i0 == 0:
             continue
-        i_c, v_c = indices[i0:i1], data[i0:i1]
+        i_c, v_c = indices[i0:i1], data[np.int64(i0):np.int64(i1)]
         
         Yc = Y[:, i_c]
         f_i = F[:, n]

@@ -18,6 +18,7 @@ def update(N, data, indices, indptr, W, H, reg, learn_rate, n_negs):
     users = np.arange(n_users)
     items = np.arange(n_items)
     correct = 0
+    skipped = 0
     for n in nb.prange(N):
         # sample u, i, j
         u = np.random.choice(users)
@@ -25,7 +26,8 @@ def update(N, data, indices, indptr, W, H, reg, learn_rate, n_negs):
         i_u1 = indptr[u+1]
         n_pos_u = i_u1 - i_u0
         if n_pos_u == 0:
-            return None
+            skipped += 1
+            continue
         
         pos = indices[i_u0:i_u1]
         # ii = np.random.randint(i_u0, i_u1)
@@ -83,7 +85,7 @@ def update(N, data, indices, indptr, W, H, reg, learn_rate, n_negs):
         if (1 - z_ui) > avg_z_uj / np.float32(n_negs):
             correct += 1
  
-    return correct
+    return correct, skipped
 
 
 class SGNS(TopKRecommender):
@@ -122,10 +124,10 @@ class SGNS(TopKRecommender):
     def _fit(self, Rtr, Rts=None, progress=None):
         """"""
         for n in range(self.n_epochs):
-            correct = update(Rtr.nnz, Rtr.data, Rtr.indices, Rtr.indptr,
-                             self.user_factors, self.item_factors,
-                             reg=self.reg, n_negs=self.n_negs,
-                             learn_rate=self.lr)
+            correct, skipped = update(Rtr.nnz, Rtr.data, Rtr.indices, Rtr.indptr,
+                                      self.user_factors, self.item_factors,
+                                      reg=self.reg, n_negs=self.n_negs,
+                                      learn_rate=self.lr)
 
             if (Rts is not None and
                     self.report_every is not None and
@@ -136,6 +138,7 @@ class SGNS(TopKRecommender):
                 progress.update(1)
                 progress.set_postfix({
                     'correct': '{:.2%}'.format(correct / Rtr.nnz),
+                    'skipped': '{:.2%}'.format(skipped / Rtr.nnz)
                 })
                 
     def predict(self, user, cutoff=40):

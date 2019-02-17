@@ -24,8 +24,9 @@ def update(Ctr, W, H, reg):
     update_factors(n_items, data, indices, indptr, H, W, reg)
     
     
-@nb.njit("void(i8,f4[:],i4[:],i4[:],f4[:, :],f4[:, :],f4)",
-         nogil=True, parallel=True, fastmath=True)
+# @nb.njit("void(i8,f4[:],i4[:],i4[:],f4[:, :],f4[:, :],f8)",
+#          nogil=True, parallel=True, fastmath=True)
+@nb.njit(nogil=True, parallel=True, fastmath=True)
 def update_factors(n_entities, data, indices, indptr, X, Y, reg):
     """""" 
     # pre-calc covariance
@@ -37,13 +38,14 @@ def update_factors(n_entities, data, indices, indptr, X, Y, reg):
         i0, i1 = indptr[n], indptr[n+1]
         if i1 - i0 == 0:
             continue
-        i_c, v_c = indices[i0:i1], data[i0:i1]
+        i_c = indices[i0:i1]
+        v_c = data[np.int64(i0):np.int64(i1)]
         
         Yc = Y[:, i_c]
         YCmIY = Yc.dot(np.diag(v_c)).dot(Yc.T)
-        A = YY + YCmIY + reg * I
+        A = (YY + YCmIY + reg * I).astype(np.float32)
         b = Yc.dot(v_c + 1).astype(np.float32)
-        
+
         # update
         X[:, n] = np.linalg.solve(A, b)
 

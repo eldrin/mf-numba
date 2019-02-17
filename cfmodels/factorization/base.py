@@ -82,7 +82,7 @@ def predict(u, i, W, H):
 def predict_k(u, W, H, k):
     """"""
     scores = np.zeros((H.shape[-1],), dtype=H.dtype)
-    for i in nb.prange(H.shape[-1]):
+    for i in range(H.shape[-1]):
         for r in range(W.shape[0]):
             scores[i] += -W[r, u] * H[r, i]
     ix = np.argpartition(scores, k)[:k]
