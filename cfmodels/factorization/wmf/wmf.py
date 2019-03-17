@@ -15,18 +15,18 @@ def update(Ctr, W, H, reg):
     n_items = Ctr.shape[1]
  
     # update user factors
-    data, indices, indptr = Ctr.data, Ctr.indices, Ctr.indptr
+    data, indices, indptr = Ctr.data, Ctr.indices, Ctr.indptr.astype(np.int64)
     update_factors(n_users, data, indices, indptr, W, H, reg)
     
     # update item factors
     CtrT = Ctr.T.tocsr()
-    data, indices, indptr = CtrT.data, CtrT.indices, CtrT.indptr
+    data, indices, indptr = CtrT.data, CtrT.indices, CtrT.indptr.astype(np.int64)
     update_factors(n_items, data, indices, indptr, H, W, reg)
     
     
-# @nb.njit("void(i8,f4[:],i4[:],i4[:],f4[:, :],f4[:, :],f8)",
-#          nogil=True, parallel=True, fastmath=True)
-@nb.njit(nogil=True, parallel=True, fastmath=True)
+@nb.njit("void(i8,f4[:],i4[:],i8[:],f4[:, :],f4[:, :],f8)",
+         nogil=True, parallel=True, fastmath=True)
+# @nb.njit(nogil=True, parallel=True)
 def update_factors(n_entities, data, indices, indptr, X, Y, reg):
     """""" 
     # pre-calc covariance
@@ -39,7 +39,7 @@ def update_factors(n_entities, data, indices, indptr, X, Y, reg):
         if i1 - i0 == 0:
             continue
         i_c = indices[i0:i1]
-        v_c = data[np.int64(i0):np.int64(i1)]
+        v_c = data[i0:i1]
         
         Yc = Y[:, i_c]
         YCmIY = Yc.dot(np.diag(v_c)).dot(Yc.T)
@@ -69,7 +69,7 @@ def log_transform(Rtr, alpha, eps, *params):
 class WMF(TopKRecommender):
     """"""
     def __init__(self, n_factors, alpha=1., eps=1., reg=0.001,
-                 init=0.01, n_epochs=15, transform=linear_transform,
+                 init=0.1, n_epochs=15, transform=linear_transform,
                  dtype=np.float32, verbose=0, monitors=[AveragePrecision()],
                  report_every=1, name='WMF', *args, **kwargs):
         """"""

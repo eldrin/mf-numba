@@ -73,7 +73,7 @@ def predict(u, i, W, H):
     # for j in nb.prange(len(i)):
     #     for r in range(W.shape[0]):
     #         scores[j] += W[r, u] * H[r, i[j]]
-    scores = W[:, u].T.dot(H).ravel()
+    scores = -W[:, u].T.dot(H).ravel()
     return scores
 
 
@@ -82,7 +82,7 @@ def predict(u, i, W, H):
 @nb.jit
 def predict_k(u, W, H, k):
     """"""
-    scores = W[:, u].T.dot(H).ravel()
+    scores = -W[:, u].T.dot(H).ravel()
     ix = np.argpartition(scores, k)[:k]
     return ix[np.argsort(scores[ix])]
 
