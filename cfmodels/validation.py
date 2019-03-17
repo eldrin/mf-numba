@@ -48,6 +48,9 @@ def split_user(data, ratio=0.8):
         data.groupby('user')['value'].apply(list).items()):
 
         # np.random.shuffle(items)
+        rnd_idx = np.random.permutation(len(items))
+        items = [items[j] for j in rnd_idx]
+        value = [value[j] for j in rnd_idx]
         bound = int(ratio * len(items))
         train.extend([(u, i, v) for i, v in zip(items[:bound], value[:bound])])
         test.extend([(u, i, v) for i, v in zip(items[bound:], value[bound:])])
