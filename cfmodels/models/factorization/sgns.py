@@ -4,10 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from scipy import sparse as sp
 
-from ..metrics import AveragePrecision
-from ..math import sigmoid
-from .base import TopKRecommender, predict_k
-from ..validation import evaluate
+from ...metrics import AveragePrecision
+from ...math import sigmoid
+from ..base import TopKRecommender, predict_k
+from ...validation import evaluate
 
 
 @nb.njit(parallel=True, nogil=True)

@@ -4,10 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from scipy import sparse as sp
 
-from ..metrics import MSE
-from ..math import sigmoid
-from .base import RatingRecommender, predict
-from ..validation import evaluate_fm
+from ...metrics import MSE
+from ...math import sigmoid
+from ..base import RatingRecommender, predict
+from ...validation import evaluate_fm
 
 
 @nb.njit("f4(i4[:],f4[:],f4[:],f4[:,:])")

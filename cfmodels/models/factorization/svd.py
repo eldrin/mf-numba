@@ -4,10 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from scipy import sparse as sp
 
-from ..sampling import uniform_sample
-from ..metrics import MSE
-from .base import RatingRecommender, predict
-from ..validation import evaluate
+from ...sampling import uniform_sample
+from ...metrics import MSE
+from ..base import RatingRecommender, predict
+from ...validation import evaluate
 
 
 @nb.njit(nogil=True, parallel=True)
@@ -30,8 +30,9 @@ def update(N, data, indices, indptr, mu, W, H, reg, learn_rate):
             
         # update
         tmp_wu = W[:, u].copy()
-        wu, hi = tmp_wu, H[:, i]
-        bu, bi = tmp_wu[-2], H[-1, i]
+        tmp_hi = H[:, i].copy()
+        wu, hi = tmp_wu, tmp_hi 
+        bu, bi = tmp_wu[-2], tmp_hi[-1]
 
         x_ui = 0.
         for r in range(W.shape[0]):
@@ -40,10 +41,10 @@ def update(N, data, indices, indptr, mu, W, H, reg, learn_rate):
         e_ui = v - p_ui
 
         for r in range(len(hi) - 2): 
-            W[r, u] -= learn_rate * (-e_ui * hi[r] + reg_w * wu[r])
-            H[r, i] -= learn_rate * (-e_ui * wu[r] + reg_h * hi[r])
-        W[-2, u] -= learn_rate * (-e_ui + reg_b * bu)
-        H[-1, i] -= learn_rate * (-e_ui + reg_b * bi)
+            W[r, u] += learn_rate * (e_ui * hi[r] - reg_w * wu[r])
+            H[r, i] += learn_rate * (e_ui * wu[r] - reg_h * hi[r])
+        W[-2, u] += learn_rate * (e_ui - reg_b * bu)
+        H[-1, i] += learn_rate * (e_ui - reg_b * bi)
 
         errsum += e_ui**2  # MSE
 
@@ -73,8 +74,10 @@ class SVDlike(RatingRecommender):
         self.user_factors = self._init_factors(
             Rtr.shape[0], self.n_factors + 2, self.dtype, self.init)        
         self.user_factors[-1] = 1.  # for item bias
+        self.user_factors[-2] = 0.  # for user bias
         self.item_factors = self._init_factors(
             Rtr.shape[1], self.n_factors + 2, self.dtype, self.init)
+        self.item_factors[-1] = 0.  # for item bias
         self.item_factors[-2] = 1.  # for user bias
         
         # get global mean

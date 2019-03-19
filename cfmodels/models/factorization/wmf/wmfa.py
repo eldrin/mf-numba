@@ -4,9 +4,9 @@ import pandas as pd
 from tqdm import tqdm
 from scipy import sparse as sp
 
-from ...metrics import AveragePrecision
-from ..base import TopKRecommender, predict_k
-from ...validation import evaluate
+from ....metrics import AveragePrecision
+from ...base import TopKRecommender, predict_k
+from ....validation import evaluate
 from .wmf import log_transform, linear_transform
 
 

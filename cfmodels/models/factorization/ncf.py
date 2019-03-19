@@ -9,11 +9,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from ..sampling import uniform_sample
-from ..metrics import AveragePrecision
-from ..math import sigmoid
-from .base import TopKRecommender, predict_k
-from ..validation import evaluate
+from ...sampling import uniform_sample
+from ...metrics import AveragePrecision
+from ...math import sigmoid
+from ..base import TopKRecommender, predict_k
+from ...validation import evaluate
 
 
 class SparseDense(nn.Module):

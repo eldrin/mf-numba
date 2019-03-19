@@ -66,14 +66,13 @@ def is_metric_fit(metric, model):
             raise MetricModelMismatch
             
             
-@nb.jit
 def predict(u, i, W, H):
     """"""
     # scores = np.zeros((len(i),), dtype=H.dtype)
     # for j in nb.prange(len(i)):
     #     for r in range(W.shape[0]):
     #         scores[j] += W[r, u] * H[r, i[j]]
-    scores = -W[:, u].T.dot(H).ravel()
+    scores = W[:, u].T.dot(H[:, i]).ravel()
     return scores
 
 

@@ -4,11 +4,11 @@ import pandas as pd
 from tqdm import tqdm
 from scipy import sparse as sp
 
-from ..sampling import uniform_sample
-from ..metrics import MSE
-from ..math import sigmoid
-from .base import RatingRecommender, predict
-from ..validation import evaluate
+from ...sampling import uniform_sample
+from ...metrics import MSE
+from ...math import sigmoid
+from ..base import RatingRecommender, predict
+from ...validation import evaluate
 
 
 @nb.njit(nogil=True, parallel=True)
