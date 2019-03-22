@@ -25,16 +25,7 @@ class RecDataBase(object):
         self._triplets = RecDataBase._load_csv(
             data_fn, self._col_map, sep, header, index_col
         )
-
-        # densify, if requested
-        if densify and isinstance(densify, dict):
-            self._triplets = _densify(self._triplets, densify, verbose=True)
-
-        # register entities
-        self._register_internal_idx(entities)
-
-        # prepare train/test matrices
-        self._prepare_mats()
+        self.prepare_data(self._triplets, entities, densify)
 
     @staticmethod
     def _load_csv(fn, col_map, sep=',', header=None, index_col=None):
@@ -48,18 +39,18 @@ class RecDataBase(object):
         data.columns = [col_map[col] for col in data.columns]
         return data
 
-    def _register_internal_idx(self, entities=['user', 'item']):
+    def _register_internal_idx(self, triplets, entities=['user', 'item']):
         """"""
         self.entity_maps = {}
         for entity in entities:
             # 1. check and assert the un-existing entities
-            if entity not in self._triplets.columns:
+            if entity not in triplets.columns:
                 continue
 
             # 2. get unique entities & register them
             self.entity_maps[entity] = {
                 orig:new for new, orig
-                in enumerate(set(self._triplets[entity].unique()))
+                in enumerate(set(triplets[entity].unique()))
             }
 
     def update_entity(self, entity, new_objects):
@@ -74,11 +65,11 @@ class RecDataBase(object):
                 self.entity_maps[entity][o] = last
                 last += 1
 
-    def _prepare_mats(self):
+    def _prepare_mats(self, triplets):
         """"""
         # split the data
         self._train, self._test = SPLIT_MAP[self.split](
-            self._triplets, ratio=self.split_ratio
+            triplets, ratio=self.split_ratio
         )
 
         # swap original object into internal indices
@@ -87,6 +78,18 @@ class RecDataBase(object):
             self._test[entity] = self._test[entity].map(entity_map)
         
         # convert data into CSR matrix
-        mat_size = [self._triplets[entity].nunique() for entity in self.entities]
+        mat_size = [triplets[entity].nunique() for entity in self.entities]
         self.train_mat_ = df2csr(self._train, shape=mat_size)
         self.test_mat_ = df2csr(self._test, shape=mat_size)
+
+    def prepare_data(self, triplets, entities, densify):
+        """"""
+        # densify, if requested
+        if densify and isinstance(densify, dict):
+            triplets = _densify(triplets, densify, verbose=True)
+
+        # register entities
+        self._register_internal_idx(triplets, entities)
+
+        # prepare train/test matrices
+        self._prepare_mats(triplets)

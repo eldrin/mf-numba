@@ -36,7 +36,6 @@ def densify(triplet, entity_mins={'user':5, 'item':5}, verbose=False):
     j = 0
     d = 1
     data = triplet.copy()
-    assert data.shape[-1] == 3
     if any([entity not in data.columns for entity in entity_mins.keys()]):
         raise ValueError(
             '[ERROR] all the requested entity should be included in the data'
