@@ -44,11 +44,13 @@ def densify(triplet, entity_mins={'user':5, 'item':5}, verbose=False):
 
     while d > 0:
         d_ = data.shape[0]
+        data_ = data
         for entity, thres in entity_mins.items():
             n_interactions = data.groupby(entity).size()
             data_ = data[
                 data[entity].isin(n_interactions[n_interactions > thres].index)
             ]
+        data = data_
         d = d_ - data.shape[0]
         
         if verbose:
