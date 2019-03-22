@@ -40,7 +40,11 @@ class RecDataBase(object):
     def _load_csv(fn, col_map, sep=',', header=None, index_col=None):
         """"""
         data = pd.read_csv(fn, sep=sep, header=header, index_col=index_col)
-        data = data[list(col_map.keys())]
+        data = data[[key for key in col_map.keys() if key != 'agg']]
+        if 'agg' in col_map:
+            data = data.groupby([key for key in col_map.keys() if key != 'agg'])
+            data = data.size().reset_index()
+            data = data.rename({0:'agg'}, axis=1)
         data.columns = [col_map[col] for col in data.columns]
         return data
 
