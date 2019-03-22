@@ -23,13 +23,12 @@ def df2csr(df, shape=None):
     return csr
 
 
-def densify(triplet, user_min=5, item_min=5, verbose=False):
+def densify(triplet, entity_mins={'user':5, 'item':5}, verbose=False):
     """ Densifying the triplets based on the minimum interaction
     
     Args:
         triplet (pandas.DataFrame): triplet data (only suppurt user-item-value)
-        user_min (int) : minimum number items that are interacted with users
-        item_min (int) : minimum number users that are interacted with items
+        entity_mins (int) : minimum number other objects that are interacted with target entity
         verbose (bool) : boolean flag for the verbosity
     """
     if verbose:
@@ -38,13 +37,18 @@ def densify(triplet, user_min=5, item_min=5, verbose=False):
     d = 1
     data = triplet.copy()
     assert data.shape[-1] == 3
-    data.columns = ['user', 'item', 'value']
+    if any([entity not in data.columns for entity in entity_mins.keys()]):
+        raise ValueError(
+            '[ERROR] all the requested entity should be included in the data'
+        )
+
     while d > 0:
         d_ = data.shape[0]
-        user_size = data.groupby('user').size()
-        data_ = data[data['user'].isin(user_size[user_size > user_min].index)]
-        item_size = data_.groupby('item').size()
-        data = data_[data_['item'].isin(item_size[item_size > item_min].index)]
+        for entity, thres in entity_mins.items():
+            n_interactions = data.groupby(entity).size()
+            data_ = data[
+                data[entity].isin(n_interactions[n_interactions > thres].index)
+            ]
         d = d_ - data.shape[0]
         
         if verbose:
@@ -53,11 +57,6 @@ def densify(triplet, user_min=5, item_min=5, verbose=False):
         j += 1
         
     return data
-
-
-def indexirize(named_triplet):
-    """"""
-    raise NotImplementedError
 
 
 def df2fm(df):

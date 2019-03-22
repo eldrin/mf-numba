@@ -2,6 +2,7 @@ import pandas as pd
 from os.path import abspath, dirname, join
 from .utils import read_data, df2csr, df2fm
 from .validation import split_inner, split_time, split_user
+from .data import RecDataBase
 
 
 def load_test_data():
@@ -134,7 +135,7 @@ def test_ncf(Rtr, Rts, type='rank', k=20, arch=(20,), verbose=1):
     
 if __name__ == "__main__":
     
-    train, test, Rtr, Rts = load_test_data()
+    # train, test, Rtr, Rts = load_test_data()
     # model = test_plsa(Rtr, Rts)
     # model = test_wmf(Rtr, Rts)
     # model = test_bpr(Rtr, Rts)
@@ -142,6 +143,11 @@ if __name__ == "__main__":
     # model = test_implicit_als(Rtr, Rts)
     # model = test_implicit_bpr(Rtr, Rts)
     # model = test_svdlike(Rtr, Rts)
-    model = test_pmf(Rtr, Rts)
+    # model = test_pmf(Rtr, Rts)
     # model = test_fm(train, test)
     # model = test_ncf(Rtr, Rts)
+
+    data = RecDataBase(
+        join(dirname(__file__), '..', 'data/lastfm55.subset.triplet'),
+        densify={'user':20, 'item':50}
+    )
