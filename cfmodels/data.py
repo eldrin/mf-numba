@@ -7,6 +7,7 @@ SPLIT_MAP = {
     'inner': split_inner,
     'outer': split_outer,
     'user': split_user,
+    None: lambda triplet, ratio: (triplet, None)  # no split
 }
 
 
@@ -19,13 +20,14 @@ class RecDataBase(object):
         self.split = split
         self.split_ratio = split_ratio
         self.entities = entities
+        self.densify = densify
         self._col_map = {v:k for k, v in col_map.items()}
 
         # read data
         self._triplets = RecDataBase._load_csv(
             data_fn, self._col_map, sep, header, index_col
         )
-        self.prepare_data(self._triplets, entities, densify)
+        self.prepare_data()
 
     @staticmethod
     def _load_csv(fn, col_map, sep=',', header=None, index_col=None):
@@ -72,24 +74,38 @@ class RecDataBase(object):
             triplets, ratio=self.split_ratio
         )
 
-        # swap original object into internal indices
-        for entity, entity_map in self.entity_maps.items():
-            self._train[entity] = self._train[entity].map(entity_map)
-            self._test[entity] = self._test[entity].map(entity_map)
-        
-        # convert data into CSR matrix
-        mat_size = [triplets[entity].nunique() for entity in self.entities]
-        self.train_mat_ = df2csr(self._train, shape=mat_size)
-        self.test_mat_ = df2csr(self._test, shape=mat_size)
+        if self.split is not None:
+            # swap original object into internal indices
+            for entity, entity_map in self.entity_maps.items():
+                self._train[entity] = self._train[entity].map(entity_map)
+                self._test[entity] = self._test[entity].map(entity_map)
+            
+            # convert data into CSR matrix
+            mat_size = [triplets[entity].nunique() for entity in self.entities]
+            self.train_mat_ = df2csr(self._train, shape=mat_size,
+                                     keys=self.entities+['value'])
+            self.test_mat_ = df2csr(self._test, shape=mat_size,
+                                    keys=self.entities+['value'])
 
-    def prepare_data(self, triplets, entities, densify):
+        else:
+            # swap original object into internal indices
+            for entity, entity_map in self.entity_maps.items():
+                self._train[entity] = self._train[entity].map(entity_map)
+            
+            # convert data into CSR matrix
+            mat_size = [triplets[entity].nunique() for entity in self.entities]
+            self.train_mat_ = df2csr(self._train, shape=mat_size,
+                                     keys=self.entities+['value'])
+            self.test_mat_ = None
+
+    def prepare_data(self):
         """"""
         # densify, if requested
-        if densify and isinstance(densify, dict):
-            triplets = _densify(triplets, densify, verbose=True)
+        if self.densify and isinstance(self.densify, dict):
+            self._triplets = _densify(self._triplets, self.densify, verbose=True)
 
         # register entities
-        self._register_internal_idx(triplets, entities)
+        self._register_internal_idx(self._triplets, self.entities)
 
         # prepare train/test matrices
-        self._prepare_mats(triplets)
+        self._prepare_mats(self._triplets)

@@ -15,9 +15,9 @@ def read_data(fn, columns=['user', 'item', 'value'], shape=None):
     return D, ll
 
 
-def df2csr(df, shape=None):
+def df2csr(df, shape=None, keys=['user', 'item', 'value']):
     """"""
-    i, j, v = df['user'], df['item'], df['value']
+    i, j, v = df[keys[0]], df[keys[1]], df[keys[2]]
     csr = sp.coo_matrix((v, (i, j)), shape=shape).tocsr()
     csr.eliminate_zeros()
     return csr
