@@ -69,33 +69,24 @@ class RecDataBase(object):
 
     def _prepare_mats(self, triplets):
         """"""
-        # split the data
-        self._train, self._test = SPLIT_MAP[self.split](
-            triplets, ratio=self.split_ratio
-        )
+        # copy the input triplet
+        triplets_ = triplets.copy()
+        
+        # swap original object into internal indices
+        for entity, entity_map in self.entity_maps.items():
+            triplets_[entity] = triplets_[entity].map(entity_map)    
+            
+        mat_size = [triplets_[entity].nunique() for entity in self.entities]
+        mat = df2csr(triplets_, shape=mat_size,
+                     keys=self.entities + ['value'])
 
         if self.split is not None:
-            # swap original object into internal indices
-            for entity, entity_map in self.entity_maps.items():
-                self._train[entity] = self._train[entity].map(entity_map)
-                self._test[entity] = self._test[entity].map(entity_map)
-            
-            # convert data into CSR matrix
-            mat_size = [triplets[entity].nunique() for entity in self.entities]
-            self.train_mat_ = df2csr(self._train, shape=mat_size,
-                                     keys=self.entities+['value'])
-            self.test_mat_ = df2csr(self._test, shape=mat_size,
-                                    keys=self.entities+['value'])
+            self.train_mat_, self.test_mat_ = SPLIT_MAP[self.split](
+                mat, ratio=self.split_ratio
+            )
 
         else:
-            # swap original object into internal indices
-            for entity, entity_map in self.entity_maps.items():
-                self._train[entity] = self._train[entity].map(entity_map)
-            
-            # convert data into CSR matrix
-            mat_size = [triplets[entity].nunique() for entity in self.entities]
-            self.train_mat_ = df2csr(self._train, shape=mat_size,
-                                     keys=self.entities+['value'])
+            self.train_mat_ = mat
             self.test_mat_ = None
 
     def prepare_data(self):
