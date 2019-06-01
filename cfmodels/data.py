@@ -44,6 +44,7 @@ class RecDataBase(object):
     def _register_internal_idx(self, triplets, entities=['user', 'item']):
         """"""
         self.entity_maps = {}
+        self.inv_entity_maps = {}
         for entity in entities:
             # 1. check and assert the un-existing entities
             if entity not in triplets.columns:
@@ -53,6 +54,10 @@ class RecDataBase(object):
             self.entity_maps[entity] = {
                 orig:new for new, orig
                 in enumerate(set(triplets[entity].unique()))
+            }
+            self.inv_entity_maps[entity] = {
+                new:orig for orig, new
+                in self.entity_maps[entity].items()
             }
 
     def update_entity(self, entity, new_objects):
