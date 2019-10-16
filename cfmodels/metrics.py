@@ -146,15 +146,16 @@ def ndcg(actual, predicted, k=10):
         predicted = predicted[:k]
 
     dcg = 0.
+    idcg = 0.
     for i, p in enumerate(predicted):
         if np.any(actual == p) and np.all(predicted[:i] != p):
-            dcg += 1. / np.log2((i+1) + 1.)
+            dcg += 1. / np.log2(i + 2.)
+        if i < len(actual):
+            idcg += 1. / np.log2(i + 2.)
 
-    idcg = np.sum(1. / np.log2(np.arange(1, len(actual)+1) + 1.))
-    
     if len(actual) == 0:
         return 0.
-    
+
     return dcg / idcg
 
 
